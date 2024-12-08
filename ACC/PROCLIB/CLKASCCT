@@ -1,0 +1,49 @@
+//CLKASCCT PROC SOURCE=                                                 00010022
+//*                                                                     00020019
+//TRN    EXEC PGM=DFHEAP1$,PARM='NOEPILOG,SP',                          00660025
+//            REGION=0M                                                 00670022
+//STEPLIB  DD DSN=DFH550.CICS.SDFHLOAD,DISP=SHR                         00680022
+//SYSPRINT DD SYSOUT=*                                                  00690022
+//SYSIN    DD DISP=SHR,DSN=ACC.DESV.SOURCE(&SOURCE)                     00691023
+//SYSPUNCH DD DSN=&&SYSCIN,                                             00700022
+//            DISP=(,PASS),UNIT=SYSDA,                                  00710022
+//            DCB=BLKSIZE=400,                                          00720022
+//            SPACE=(400,(400,100))                                     00730022
+//*                                                                     00740022
+//ASM    EXEC PGM=ASMA90,                                               00750022
+//            REGION=0M,                                                00760022
+//            PARM='DECK,NOOBJECT,LIST,RENT'                            00770025
+//SYSLIB   DD DSN=ACC.DESV.COPYBOOK,DISP=SHR                            00780023
+//         DD DSN=ACC.DESV.MACLIB,DISP=SHR                              00790023
+//         DD DSN=DFH550.CICS.SDFHMAC,DISP=SHR                          00791023
+//         DD DSN=DFH550.CICS.SDFHSAMP,DISP=SHR                         00800022
+//         DD DSN=SYS1.MACLIB,DISP=SHR                                  00810022
+//         DD DSN=SYS1.MODGEN,DISP=SHR                                  00820022
+//SYSUT1   DD UNIT=SYSDA,SPACE=(1700,(400,400))                         00830022
+//SYSUT2   DD UNIT=SYSDA,SPACE=(1700,(400,400))                         00840022
+//SYSUT3   DD UNIT=SYSDA,SPACE=(1700,(400,400))                         00850022
+//SYSPUNCH DD DSN=&&LOADSET,                                            00860022
+//            UNIT=SYSDA,DISP=(,PASS),                                  00870022
+//            SPACE=(400,(100,100))                                     00880022
+//SYSPRINT DD SYSOUT=*                                                  00890022
+//SYSIN    DD DSN=&&SYSCIN,DISP=(OLD,DELETE)                            00900022
+//*                                                                     00910022
+//COPYLINK EXEC PGM=IEBGENER,COND=(7,LT,ASM)                            00920022
+//SYSUT1   DD DSN=DFH550.CICS.SDFHMAC(DFHEILIA),DISP=SHR                00930022
+//SYSUT2   DD DSN=&&COPYLINK,DISP=(NEW,PASS),                           00940022
+//            DCB=(LRECL=80,BLKSIZE=400,RECFM=FB),                      00950022
+//            UNIT=SYSDA,SPACE=(400,(20,20))                            00960022
+//SYSPRINT DD SYSOUT=*                                                  00970022
+//SYSIN    DD DUMMY                                                     00980022
+//*                                                                     00990022
+//LKED   EXEC PGM=IEWL,REGION=0M,                                       01000022
+//            PARM='LIST,XREF,RENT',COND=(7,LT,ASM)                     01010025
+//SYSLIB   DD DSN=DFH550.CICS.SDFHLOAD,DISP=SHR                         01020022
+//         DD DSN=ACC.DESV.LOADLIB,DISP=SHR                             01021023
+//SYSLMOD  DD DSN=ACC.DESV.LOADLIB(&SOURCE),DISP=SHR                    01022023
+//SYSUT1   DD UNIT=SYSDA,DCB=BLKSIZE=1024,                              01040022
+//            SPACE=(1024,(200,20))                                     01050022
+//SYSPRINT DD SYSOUT=*                                                  01060022
+//SYSLIN   DD DSN=&&LOADSET,DISP=(OLD,DELETE)                           01070022
+//         DD DSN=&&COPYLINK,DISP=(OLD,DELETE)                          01080022
+//         DD DDNAME=SYSIN                                              01090022

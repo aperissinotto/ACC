@@ -1,0 +1,4 @@
+//JHELLO  JOB 1,NOTIFY=&SYSUID                                          00010013
+//LIBSCIC  JCLLIB  ORDER=ACC.DESV.PROCLIB                               00020007
+//COMPPGM  EXEC CLKCBCCT,                                               00030013
+//          SOURCE=HELLO                                                00080013

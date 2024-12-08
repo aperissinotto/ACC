@@ -1,0 +1,10 @@
+//JTESTE JOB 1,NOTIFY=&SYSUID                                           00010014
+//LIBSCIC  JCLLIB  ORDER=ACC.DESV.PROCLIB                               00020007
+//COMPPGM  EXEC CLKASBAT,                                               00030009
+//          CMPPARM='DECK,NOOBJECT,LIST',                               00040014
+//          LNKPARM='AMODE(31),RMODE(ANY)',                             00050014
+//          PGMI=TESTE                                                  00080014
+//LINK.SYSIN DD *                                                       00090008
+   ENTRY TESTE                                                          00100014
+   NAME TESTE(R)                                                        00110014
+/*                                                                      00120003

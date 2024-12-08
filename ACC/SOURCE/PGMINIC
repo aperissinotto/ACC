@@ -1,0 +1,27 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. PGMINIC.
+       ENVIRONMENT DIVISION.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+
+       01 WPGMNAME.
+           02   PIC X(008) VALUE 'PGMCALLA'.
+       01 MYMESSAGE.
+           02   PIC X(100) VALUE SPACES.
+
+       PROCEDURE DIVISION.
+
+       MAIN-LINE SECTION.
+
+           EXEC CICS LINK
+                    PROGRAM(WPGMNAME)
+                    COMMAREA(MYMESSAGE)
+                    LENGTH(LENGTH OF MYMESSAGE)
+                    NOHANDLE
+           END-EXEC.
+
+           EXEC CICS SEND TEXT FROM(MYMESSAGE) ERASE
+                    LENGTH(LENGTH OF MYMESSAGE) CURSOR(81)
+           END-EXEC.
+
+           EXEC CICS RETURN END-EXEC.

@@ -1,0 +1,11 @@
+//JCA6455S JOB 1,NOTIFY=&SYSUID                                         00010003
+//LIBSCIC  JCLLIB  ORDER=DFH550.CICS.SDFHPROC                           00020000
+//COMPMAP  EXEC DFHEGTAL,                                               00030003
+//          PROGLIB='ACC.DESV.LOAD',                                    00040003
+//          DSCTLIB='ACC.DESV.COPYBOOK',                                00050001
+//          OUTC='*'                                                    00070003
+//TRN.SYSIN DD DISP=SHR,DSN=ACC.DESV.SOURCE(PGMNAME)                    00080003
+//LKED.SYSIN DD *                                                       00090003
+   ENTRY PGMNAME                                                        00100003
+   NAME PGMNAME(R)                                                      00110003
+/*                                                                      00120003

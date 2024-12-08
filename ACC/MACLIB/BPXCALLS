@@ -1,0 +1,10 @@
+         MACRO
+&NAME   BPXCALLS &BPXSRV
+         L     R15,16
+         L     R15,544(,R15)
+         L     R15,24(,R15)
+         LA    R14,&BPXSRV
+         L     R15,0(R14,R15)
+         BASR  R14,R15
+         MEXIT
+         MEND

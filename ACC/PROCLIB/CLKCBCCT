@@ -1,0 +1,65 @@
+//CLKCBCCT PROC SOURCE=                                                 00010019
+//*                                                                     00020019
+//TRN    EXEC PGM=DFHECP1$,                                             00750019
+//            PARM='COBOL3',                                            00760019
+//            REGION=0M                                                 00770019
+//STEPLIB  DD DSN=DFH550.CICS.SDFHLOAD,DISP=SHR                         00780021
+//SYSPRINT DD SYSOUT=*                                                  00790019
+//SYSIN    DD DISP=SHR,DSN=ACC.DESV.SOURCE(&SOURCE)                     00791019
+//SYSPUNCH DD DSN=&&SYSCIN,                                             00800019
+//            DISP=(,PASS),UNIT=SYSDA,                                  00810019
+//            DCB=BLKSIZE=400,                                          00820019
+//            SPACE=(400,(400,100))                                     00830019
+//*                                                                     00840019
+//COB    EXEC PGM=IGYCRCTL,REGION=0M,                                   00850019
+//       PARM='NODYNAM,OBJECT,RENT,APOST,MAP,XREF'                      00860019
+//STEPLIB  DD DSN=IGY630.SIGYCOMP,DISP=SHR                              00870019
+//SYSLIB   DD DSN=ACC.DESV.COPYBOOK,DISP=SHR                            00880019
+//         DD DSN=ACC.DESV.MACLIB,DISP=SHR                              00890019
+//         DD DSN=SYS1.MACLIB,DISP=SHR                                  00890119
+//         DD DSN=DFH550.CICS.SDFHCOB,DISP=SHR                          00891021
+//         DD DSN=DFH550.CICS.SDFHMAC,DISP=SHR                          00900021
+//         DD DSN=DFH550.CICS.SDFHSAMP,DISP=SHR                         00910021
+//SYSPRINT DD SYSOUT=*                                                  00920019
+//SYSIN    DD DSN=&&SYSCIN,DISP=(OLD,DELETE)                            00930019
+//SYSLIN   DD DSN=&&LOADSET,DISP=(MOD,PASS),                            00940019
+//            UNIT=SYSDA,SPACE=(80,(250,100))                           00950019
+//SYSUT1   DD UNIT=SYSDA,SPACE=(460,(350,100))                          00960019
+//SYSUT2   DD UNIT=SYSDA,SPACE=(460,(350,100))                          00970019
+//SYSUT3   DD UNIT=SYSDA,SPACE=(460,(350,100))                          00980019
+//SYSUT4   DD UNIT=SYSDA,SPACE=(460,(350,100))                          00990019
+//SYSUT5   DD UNIT=SYSDA,SPACE=(460,(350,100))                          01000019
+//SYSUT6   DD UNIT=SYSDA,SPACE=(460,(350,100))                          01010019
+//SYSUT7   DD UNIT=SYSDA,SPACE=(460,(350,100))                          01020019
+//** Additional datasets needed for 5.1 compiler **                     01030019
+//SYSUT8   DD UNIT=SYSDA,SPACE=(460,(350,100))                          01040019
+//SYSUT9   DD UNIT=SYSDA,SPACE=(460,(350,100))                          01050019
+//SYSUT10  DD UNIT=SYSDA,SPACE=(460,(350,100))                          01060019
+//SYSUT11  DD UNIT=SYSDA,SPACE=(460,(350,100))                          01070019
+//SYSUT12  DD UNIT=SYSDA,SPACE=(460,(350,100))                          01080019
+//SYSUT13  DD UNIT=SYSDA,SPACE=(460,(350,100))                          01090019
+//SYSUT14  DD UNIT=SYSDA,SPACE=(460,(350,100))                          01100019
+//SYSUT15  DD UNIT=SYSDA,SPACE=(460,(350,100))                          01110019
+//SYSMDECK DD UNIT=SYSDA,SPACE=(460,(350,100))                          01120019
+//** End of additional dataset needed for 5.1 compiler **               01130019
+//*                                                                     01140019
+//COPYLINK EXEC PGM=IEBGENER,COND=(7,LT,COB)                            01150019
+//SYSUT1   DD DSN=DFH550.CICS.SDFHSAMP(DFHEILID),DISP=SHR               01160021
+//SYSUT2   DD DSN=&&COPYLINK,DISP=(NEW,PASS),                           01170019
+//            DCB=(LRECL=80,BLKSIZE=400,RECFM=FB),                      01180019
+//            UNIT=SYSDA,SPACE=(400,(20,20))                            01190019
+//SYSPRINT DD SYSOUT=*                                                  01200019
+//SYSIN    DD DUMMY                                                     01210019
+//*                                                                     01220019
+//LKED   EXEC PGM=IEWL,REGION=0M,                                       01230019
+//            PARM='LIST,XREF',COND=(5,LT,COB)                          01240019
+//SYSLIB   DD DSN=DFH550.CICS.SDFHLOAD,DISP=SHR                         01250021
+//         DD DSN=CEE.SCEELKED,DISP=SHR                                 01260019
+//         DD DSN=ACC.DESV.LOADLIB,DISP=SHR                             01261019
+//SYSLMOD  DD DSN=ACC.DESV.LOADLIB(&SOURCE),DISP=SHR                    01270019
+//SYSUT1   DD UNIT=SYSDA,DCB=BLKSIZE=1024,                              01280019
+//            SPACE=(1024,(200,20))                                     01290019
+//SYSPRINT DD SYSOUT=*                                                  01300019
+//SYSLIN   DD DSN=&&COPYLINK,DISP=(OLD,DELETE)                          01310019
+//         DD DSN=&&LOADSET,DISP=(OLD,DELETE)                           01320019
+//         DD DDNAME=SYSIN                                              01330019

@@ -1,0 +1,61 @@
+      * Hello world CICS COBOL program to display message on
+      * terminal along with timestamp.
+      *
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. Hello.
+       ENVIRONMENT DIVISION.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+
+       01 my-message-ext.
+           02   pic x(20) value 'Hello World !'.
+
+       01 TIME-FIELDS.
+           03 ABSTIME-FIELD             PIC S9(15) COMP-3.
+           03 DATE-FIELD                PIC X(8).
+           03 TIME-FIELD                PIC X(8).
+
+       01 LOG-RECORD.
+           03 LOG-COMMENT               PIC X(80) VALUE SPACES.
+
+       PROCEDURE DIVISION.
+
+       main-line section.
+
+      *
+      * Ask CICS for the unformatted system time, then format into
+      * DATE-FIELD and TIME-FIELD using ':' and '/' separators.
+      *
+           EXEC CICS ASKTIME
+                     ABSTIME (ABSTIME-FIELD)
+           END-EXEC
+
+           EXEC CICS FORMATTIME
+                     ABSTIME (ABSTIME-FIELD)
+                     DDMMYY (DATE-FIELD)
+                     TIME (TIME-FIELD)
+                     TIMESEP
+                     DATESEP
+           END-EXEC
+
+           STRING DATE-FIELD
+                  ' '
+                  TIME-FIELD
+                  ': '
+                  my-message-ext
+                  '.'
+                  DELIMITED BY SIZE
+                  INTO LOG-COMMENT
+           END-STRING
+
+           EXEC CICS SEND TEXT FROM(LOG-COMMENT) ERASE
+                    LENGTH(LENGTH OF LOG-COMMENT) CURSOR(81)
+           END-EXEC
+
+           DISPLAY LOG-COMMENT
+
+           EXEC CICS WRITE OPERATOR TEXT(LOG-COMMENT)
+                    TEXTLENGTH(LENGTH OF LOG-COMMENT)
+           END-EXEC
+
+           EXEC CICS RETURN END-EXEC .

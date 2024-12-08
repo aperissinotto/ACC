@@ -1,0 +1,4 @@
+//JPGMINIC JOB 1,NOTIFY=&SYSUID                                         00010014
+//LIBSCIC  JCLLIB  ORDER=ACC.DESV.PROCLIB                               00020007
+//COMPPGM  EXEC CLKCBCCT,                                               00030013
+//          SOURCE=PGMINIC                                              00080014

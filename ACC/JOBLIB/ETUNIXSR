@@ -1,0 +1,13 @@
+//ETUNIXSR JOB 1,NOTIFY=&SYSUID                                         00010011
+//*DEL    EXEC PGM=IEFBR14,REGION=0M                                    00020015
+//*SYSPRINT DD SYSOUT=*                                                 00020115
+//*DUMP     DD DISP=(OLD,DELETE,DELETE),DSN=ACC.MDUMP.X                 00020215
+//TRN    EXEC PGM=TUNIXSRV,                                             00021014
+//            REGION=0M                                                 00030011
+//STEPLIB  DD DISP=SHR,DSN=ACC.DESV.LOADLIB                             00040011
+//SYSPRINT DD SYSOUT=*                                                  00050011
+//SYSOUT   DD SYSOUT=*                                                  00060011
+//SYSABEND DD SYSOUT=*                                                  00060112
+//SYSUDUMP DD SYSOUT=*                                                  00061012
+//SYSMDUMP DD   UNIT=3390,SPACE=(CYL,(10,5)),                           00070012
+//           DISP=(NEW,DELETE,KEEP),DSNAME=ACC.MDUMP.X                  00080013

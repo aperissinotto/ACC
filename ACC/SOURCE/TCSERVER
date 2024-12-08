@@ -1,0 +1,197 @@
+TCSERVER RSECT                                                    *   @ 00010025
+TCSERVER AMODE 31                                                 *   @ 00020025
+TCSERVER RMODE ANY                                                *   @ 00030025
+         SYSSTATE ARCHLVL=6                                       *   @ 00030104
+         IEABRCX DEFINE                                           *   @ 00030204
+         STM   R14,R12,12(R13)                                    *   @ 00030304
+         LARL  R12,LITERAL                                        *   @ 00030404
+         USING LITERAL,R12                                        *   @ 00030504
+*-----------------------------------------------------------------*   @ 00030604
+*        OBTEM AREA DE WORK                                       *   @ 00030704
+*-----------------------------------------------------------------*   @ 00030804
+         LR    R3,R13                                             *   @ 00030904
+*                                                                 *   @ 00031004
+         STORAGE OBTAIN,                                               X00031204
+               LENGTH=WLENGTH,                                         X00031304
+               ADDR=(R13)                                               00031404
+*                                                                 *   @ 00031504
+         USING WORKING,R13                                        *   @ 00031604
+         ST    R3,4(,R13)                                         *   @ 00031704
+         ST    R13,8(,R3)                                         *   @ 00031804
+*-----------------------------------------------------------------*   @ 00031907
+*        INICIALIZA LIST FORM                                     *   @ 00032020
+*-----------------------------------------------------------------*   @ 00032107
+         MVC   WWTO(LWTOL),LWTO                                   *   @ 00032207
+         MVC   WLOAD(LLOADL),LLOAD                                *   @ 00032320
+*-----------------------------------------------------------------*   @ 00037816
+*        CHAMADA DO BPX1PTC                                       *   @ 00037924
+*-----------------------------------------------------------------*   @ 00038016
+         XC WLYR6FUL,WLYR6FUL       * LIMPA WORK                  *   @ 00039016
+*                                                                 *   @ 00039116
+         MVC   PTATEYE(L'LEYEPTAT),LEYEPTAT                       *   @ 00039217
+         MVC   PTATLENGTH,=A(PTATUSEROFFVAL)                      *   @ 00039317
+         MVC   PTATSYSOFFSET,=A(PTATSYSOFFVAL)                    *   @ 00039417
+         MVC   PTATSYSLENGTH,=A(PTATSYSLENVAL)                    *   @ 00039517
+         MVC   PTATUSEROFFSET,=A(0)                               *   @ 00039617
+         MVC   PTATUSERLENGTH,=A(0)                               *   @ 00039717
+*                                                                 *   @ 00039817
+         LA    R1,PTAT                                            *   @ 00039916
+         ST    R1,WPTCATRB                                        *   @ 00040016
+         LA    R1,WWORKPTR                                        *   @ 00040116
+         ST    R1,WPTCWORK                                        *   @ 00040216
+*                                                                 *   @ 00040320
+         LOAD  EP=TTHREAD,SF=(E,WLOAD)                            *   @ 00040421
+         ST    R0,WPTCINIT                                        *   @ 00040620
+*                                                                 *   @ 00040716
+         LA    R1,WPARMLST          * OBTEM ENDERECO DOS PARMS    *   @ 00040816
+         LA    R14,WPTCINIT                                       *   @ 00040916
+         LA    R15,WPTCWORK                                       *   @ 00041016
+         LA    R0,WPTCATRB                                        *   @ 00041116
+         STM   R14,R0,0(R1)         * SALVA NA LISTA DE PARM      *   @ 00041216
+*                                                                 *   @ 00041316
+         LA    R14,WPTCTHRD                                       *   @ 00041416
+         LA    R15,WRETVAL          * END. DO RETURN VALUE        *   @ 00041516
+         LA    R0,WRETCODE          * END. DO RETURN CODE         *   @ 00041616
+         STM   R14,R0,12(R1)        * SALVA NA LISTA DE PARM      *   @ 00041716
+*                                                                 *   @ 00041816
+         LA    R14,WRSNCODE         * END. DO REASON CODE         *   @ 00041916
+         ST    R14,24(,R1)          * SALVA NA LISTA DE PARM      *   @ 00042016
+*                                                                 *   @ 00042116
+         OI    24(R1),X'80'         * SETA ULTIMO PARAMETRO       *   @ 00042216
+*                                                                 *   @ 00042316
+         L     R15,16                                             *   @ 00042416
+         L     R15,544(,R15)                                      *   @ 00042516
+         L     R15,24(,R15)                                       *   @ 00042616
+         L     R15,BPX1PTC(,R15)                                  *   @ 00042716
+         BASR  R14,R15                                            *   @ 00042816
+*                                                                 *   @ 00042916
+         JAS   R9,RDSPRET                                         *   @ 00043016
+*-----------------------------------------------------------------*   @ 00043116
+*        FIM DO PROGRAMA                                          *   @ 00043216
+*-----------------------------------------------------------------*   @ 00043316
+         STIMER WAIT,BINTVL=INTV2                                 *   @ 00043419
+*                                                                 *   @ 00043519
+         LR    R3,R13                                             *   @ 00043616
+         L     R13,4(,R13)                                        *   @ 00043716
+*                                                                 *   @ 00043816
+         STORAGE RELEASE,                                              X00043916
+               LENGTH=WLENGTH,                                         X00044016
+               ADDR=(R3)                                                00044116
+*                                                                 *   @ 00044216
+         LM    R14,R12,12(R13)                                    *   @ 00044316
+         XR    R15,R15                                            *   @ 00044416
+         BR    R14                                                *   @ 00044516
+*-----------------------------------------------------------------*   @ 00044616
+*        DISPLAY DO RETORNO BPX                                   *   @ 00044716
+*-----------------------------------------------------------------*   @ 00044816
+RDSPRET  DS   0H                                                  *   @ 00044916
+         XC    WMSG,WMSG                                          *   @ 00045016
+         MVHHI WMSGL,L'WMSG                                       *   @ 00045116
+         MVC   WFULL(L'WRETVAL),WRETVAL                           *   @ 00045216
+         UNPK  WDOUBLE(9),WFULL(5)                                *   @ 00045316
+         NC    WDOUBLE,LTR1                                       *   @ 00045416
+         TR    WDOUBLE,LTR2                                       *   @ 00045516
+         MVC   WMSG(L'LRETVAL),LRETVAL                            *   @ 00045616
+         MVC   WMSG+L'LRETVAL(L'WDOUBLE),WDOUBLE                  *   @ 00045716
+         LA    R2,WMSGL                                           *   @ 00045816
+         WTO   TEXT=(R2),MF=(E,WWTO)                              *   @ 00045916
+*                                                                 *   @ 00046016
+         XC    WMSG,WMSG                                          *   @ 00046116
+         MVHHI WMSGL,L'WMSG                                       *   @ 00046216
+         MVC   WFULL(L'WRETCODE),WRETCODE                         *   @ 00046316
+         UNPK  WDOUBLE(9),WFULL(5)                                *   @ 00046416
+         NC    WDOUBLE,LTR1                                       *   @ 00046516
+         TR    WDOUBLE,LTR2                                       *   @ 00046616
+         MVC   WMSG(L'LRETCODE),LRETCODE                          *   @ 00046716
+         MVC   WMSG+L'LRETCODE(L'WDOUBLE),WDOUBLE                 *   @ 00046816
+         LA    R2,WMSGL                                           *   @ 00046916
+         WTO   TEXT=(R2),MF=(E,WWTO)                              *   @ 00047016
+*                                                                 *   @ 00047116
+         XC    WMSG,WMSG                                          *   @ 00047216
+         MVHHI WMSGL,L'WMSG                                       *   @ 00047316
+         MVC   WFULL(L'WRSNCODE),WRSNCODE                         *   @ 00047416
+         UNPK  WDOUBLE(9),WFULL(5)                                *   @ 00047516
+         NC    WDOUBLE,LTR1                                       *   @ 00047616
+         TR    WDOUBLE,LTR2                                       *   @ 00047716
+         MVC   WMSG(L'LRSNCODE),LRSNCODE                          *   @ 00047816
+         MVC   WMSG+L'LRSNCODE(L'WDOUBLE),WDOUBLE                 *   @ 00047916
+         LA    R2,WMSGL                                           *   @ 00048016
+         WTO   TEXT=(R2),MF=(E,WWTO)                              *   @ 00048116
+*                                                                 *   @ 00048216
+         BR    R9                                                 *   @ 00048316
+*-----------------------------------------------------------------*   @ 00049316
+*        AREA DE LITERAIS                                         *   @ 00049416
+*-----------------------------------------------------------------*   @ 00049516
+LITERAL  DS   0D                                                  *   @ 00049616
+         LTORG ,                                                  *   @ 00049716
+LWTO     WTO   TEXT=,MF=L                                         *   @ 00049816
+LWTOL    EQU   *-LWTO                                             *   @ 00049916
+LLOAD    LOAD  EP=,SF=L                                           *   @ 00050020
+LLOADL   EQU   *-LLOAD                                            *   @ 00050120
+LTR1     DC    X'0F0F0F0F0F0F0F0F'                                *   @ 00050216
+LTR2     DC    C'0123456789ABCDEF'                                *   @ 00050316
+LRETVAL  DC    C'RETVAL='                                         *   @ 00050416
+LRETCODE DC    C'RETCODE='                                        *   @ 00050516
+LRSNCODE DC    C'RSNCODE='                                        *   @ 00050616
+LEYEPTAT DC    C'BPXYPTAT'                                        *   @ 00050717
+INTV2    DC    F'6000'                                            *   @ 00050823
+*-----------------------------------------------------------------*   @ 00050916
+*        WORKING STORAGE                                          *   @ 00051016
+*-----------------------------------------------------------------*   @ 00051116
+WORKING  DSECT ,                                                  *   @ 00051216
+WSAVAREA DS  18F                                                  *   @ 00051316
+*                                                                 *   @ 00051416
+WWTO     WTO   TEXT=,MF=L                                         *   @ 00051516
+WLOAD    LOAD  EP=,SF=L                                           *   @ 00051620
+*                                                                 *   @ 00051716
+WMSGL    DS    H                                                  *   @ 00051816
+WMSG     DS    CL72                                               *   @ 00051916
+*                                                                 *   @ 00052016
+WRETVAL  DS    F                    * RETURN_VALUE                *   @ 00052116
+WRETCODE DS    F                    * RETURN_CODE                 *   @ 00052216
+WRSNCODE DS    F                    * REASON_CODE                 *   @ 00052316
+WPARMLST DS  13A                    * LISTA DE PARAMETROS         *   @ 00052416
+WLYR6FUL DS    XL128                * AREA DE WORK                *   @ 00052516
+*---------------------------------->* AREA ESPECIFICA PARA        *   @ 00052616
+         ORG   WLYR6FUL             * BPX1SOC                     *   @ 00052716
+WSOCDOMA DS    F                    * DOMAIN                      *   @ 00052816
+WSOCTYPE DS    F                    * TYPE                        *   @ 00052916
+WSOCPROT DS    F                    * PROTOCOL                    *   @ 00053016
+WSOCDIME DS    F                    * DIMENSION                   *   @ 00053116
+WSOCSKVT DS   0F                    * SOCKET_VECTOR               *   @ 00053216
+WSOCSKDS DS    F                    * SOCKET_DESCRIPTOR           *   @ 00053316
+         DS    F                    * RESERVED                    *   @ 00053416
+WSOCLENG EQU   *-WLYR6FUL           * TAMANHO                     *   @ 00053516
+*---------------------------------->* AREA ESPECIFICA PARA        *   @ 00053616
+         ORG   WLYR6FUL             * BPX1PTC                     *   @ 00053716
+WPTCINIT DS    A                    * INIT_RTN_ADDR               *   @ 00053816
+WPTCWORK DS    A                    * WORK_AREA_ADDR              *   @ 00053916
+WPTCATRB DS    A                    * ATTRIBUTE_AREA_ADDR         *   @ 00054016
+WPTCTHRD DS    CL8                  * DIMENSION                   *   @ 00054116
+WPTCLENG EQU   *-WLYR6FUL           * TAMANHO                     *   @ 00054216
+         ORG   ,                                                  *   @ 00054316
+*                                                                 *   @ 00054416
+WWORKPTR DS    CL256                                              *   @ 00054516
+         BPXYPTXL DSECT=NO          * PTHREAD PARAMETER LIST      *   @ 00054616
+         BPXYPTAT DSECT=NO          * PTHREAD ATTRIBUTES          *   @ 00054716
+*                                                                 *   @ 00054816
+WFULL    DS    F                    * FULL DE WORK                *   @ 00054916
+         DS    X                                                  *   @ 00055016
+*                                                                 *   @ 00055116
+WDOUBLE  DS    FD                   * DOUBLE DE WORK              *   @ 00055216
+         DS    X                                                  *   @ 00055316
+*                                                                 *   @ 00055416
+WHALF    DS    H                    * HALF DE WORK                *   @ 00055516
+         DS    X                                                  *   @ 00055616
+WLENGTH  EQU   *-WORKING                                          *   @ 00055716
+*-----------------------------------------------------------------*   @ 00057120
+*        AREA DAS API'S TCP/IP DO USS                             *   @ 00057220
+*-----------------------------------------------------------------*   @ 00057320
+BPXYSOCK BPXYSOCK ,                                               *   @ 00057420
+BPXYCID  BPXYCID ,                                                *   @ 00057520
+BPXYSEL  BPXYSEL ,                                                *   @ 00057620
+BPXYOPNF BPXYOPNF ,                                               *   @ 00057720
+BPXYFCTL BPXYFCTL ,                                               *   @ 00057820
+         COPY  BPXSERVO                                           *   @ 00057927
+         COPY  GENREGEQ                                           *   @ 00058027
+         END   TCSERVER                                           *   @ 00070027

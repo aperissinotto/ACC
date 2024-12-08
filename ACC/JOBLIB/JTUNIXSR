@@ -1,0 +1,10 @@
+//JTUNIXSR JOB 1,NOTIFY=&SYSUID                                         00010007
+//LIBSCIC  JCLLIB  ORDER=ACC.DESV.PROCLIB                               00020007
+//COMPPGM  EXEC CLKASBAT,                                               00030009
+//          CMPPARM='DECK,NOOBJECT,LIST,RENT',                          00040010
+//          LNKPARM='AMODE(31),RMODE(ANY),RENT',                        00050009
+//          PGMI=TUNIXSRV                                               00080009
+//LINK.SYSIN DD *                                                       00090008
+   ENTRY TUNIXSRV                                                       00100009
+   NAME TUNIXSRV(R)                                                     00110009
+/*                                                                      00120003

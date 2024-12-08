@@ -1,0 +1,295 @@
+*-----------------------------------------------------------------*   @ 00001035
+*        CHILD SERVER TASK                                        *   @ 00002063
+*-----------------------------------------------------------------*   @ 00003035
+TKCHDSRV RSECT                                                    *   @ 00010063
+TKCHDSRV AMODE 31                                                 *   @ 00020063
+TKCHDSRV RMODE ANY                                                *   @ 00030063
+         SYSSTATE ARCHLVL=6                                       *   @ 00030162
+         IEABRCX DEFINE                                           *   @ 00030304
+         BAKR  R14,0                                              *   @ 00030426
+         LARL  R12,LITERAL                                        *   @ 00030504
+         USING LITERAL,R12                                        *   @ 00030604
+         LR    R3,R1                * COPY PARM'S ADDRESS         *   @ 00030764
+*-----------------------------------------------------------------*   @ 00030804
+*        GET MEMORY TO WORKAREA                                   *   @ 00030930
+*-----------------------------------------------------------------*   @ 00031004
+         STORAGE OBTAIN,                                               X00031204
+               LENGTH=WLENGTH,                                         X00031304
+               LINKAGE=SYSTEM,                                         X00031530
+               ADDR=(R13)                                               00031704
+*                                                                 *   @ 00031804
+         USING WORKING,R13                                        *   @ 00031904
+         MVC   WEYECATC,LWEYECT     * MOVE EYE-CATCHER            *   @ 00032065
+*-----------------------------------------------------------------*   @ 00032107
+*        LIST FORM INITIALIZE                                     *   @ 00032235
+*-----------------------------------------------------------------*   @ 00032307
+         MVC   WWTO(LWTOL),LWTO                                   *   @ 00032407
+         MVC   WATCX(LATCXL),LATCX                                *   @ 00032567
+*-----------------------------------------------------------------*   @ 00032667
+*        CLEAN VARIABLES                                          *   @ 00032767
+*-----------------------------------------------------------------*   @ 00032867
+         XC    WECBSYS,WECBSYS                                    *   @ 00032967
+         XC    WECBEND,WECBEND                                    *   @ 00033067
+*-----------------------------------------------------------------*   @ 00033167
+*        GET PARMS                                                *   @ 00034064
+*-----------------------------------------------------------------*   @ 00035064
+         L     R3,0(,R3)            * POINT TO PARM LIST          *   @ 00035166
+         L     R1,0(,R3)            * GET PARM ONE - CLIENTID     *   @ 00036064
+         ST    R1,WRPARM1           * SAVE PARM ONE               *   @ 00037064
+         L     R1,4(,R3)            * GET PARM TWO - SOCKETID     *   @ 00038064
+         ST    R1,WRPARM2           * SAVE PARM TWO               *   @ 00039064
+*-----------------------------------------------------------------*   @ 00040064
+*        TAKE A SOCKET                                            *   @ 00050064
+*-----------------------------------------------------------------*   @ 00060064
+         L     R1,WRPARM1           * GET PARM ONE - CLIENTID     *   @ 00061064
+         MVC   WTAKCID,0(R1)        * MOVE CLIENTID               *   @ 00070064
+         L     R1,WRPARM2           * GET PARM ONE - SOCKETID     *   @ 00071064
+         MVC   WTAKSKD,0(R1)        * MOVE SOCKETID               *   @ 00072064
+         MVHI  WALLRVL,0            * CLEAN RETURN_VALUE          *   @ 00080064
+         MVHI  WALLRCD,0            * CLEAN RETURN_CODE           *   @ 00081064
+         MVHI  WALLRSC,0            * CLEAN REASON_CODE           *   @ 00082064
+*                                                                 *   @ 00083064
+         LA    R1,WALLPRM           * GET PARM ADDRESS            *   @ 00083164
+         LA    R14,WTAKCID          * SET CALLING PARM 0          *   @ 00083264
+         LA    R15,WTAKSKD          * SET CALLING PARM 4          *   @ 00083364
+         LA    R0,WALLRVL           * SET CALLING PARM 8          *   @ 00083464
+         STM   R14,R0,0(R1)         * SAVE ON PARM LIST           *   @ 00083564
+*                                                                 *   @ 00083664
+         LA    R14,WALLRCD          * SET CALLING PARM 12         *   @ 00083764
+         LA    R15,WALLRSC          * SET CALLING PARM 16         *   @ 00083864
+         XR    R0,R0                * CLEAN                       *   @ 00083964
+         STM   R14,R0,12(R1)        * SAVE ON PARM LIST           *   @ 00084064
+         OI    16(R1),X'80'         * SET LAST PARM               *   @ 00084164
+*                                                                 *   @ 00084264
+TAKESOCK BPXCALLS BPX1TAK           * TAKESOCKET                  *   @ 00084364
+         CHSI  WALLRVL,0            * ITS OK?                     *   @ 00084464
+         JL    BPXERROR             * NO, DISPLAY ERROR           *   @ 00084564
+         MVC   WSOCTAK,WALLRVL      * YES, SAVE NEW SOCKET        *   @ 00084664
+*-----------------------------------------------------------------*   @ 00084767
+*        START A CHILD RECEIVER SERVER                            *   @ 00084867
+*-----------------------------------------------------------------*   @ 00084967
+         LA    R1,WTAKCID           * GET ADDRESS CLIENTID        *   @ 00085067
+         ST    R1,WRPARM1           * SAVE ADDRESS CLIENTID       *   @ 00085167
+         LA    R1,WSOCTAK           * GET ADDRESS SOCKET_ID       *   @ 00085267
+         ST    R1,WRPARM2           * SAVE ADDRESS SOCKET_ID      *   @ 00085367
+*                                                                 *   @ 00085467
+         ATTACHX EP=TKCSRECV,                                          X00085567
+               PARAM=(WRPARM1,WRPARM2),VL=1,                           X00085667
+               MF=(E,WRPRMLST),                                        X00085767
+               SF=(E,WATCX)                                       *   @ 00085867
+*-----------------------------------------------------------------*   @ 00085968
+*        WAIT A END OF THREAD                                     *   @ 00086068
+*-----------------------------------------------------------------*   @ 00086168
+         LA    R1,WECBLIST          * POINT A ECBLIST             *   @ 00086268
+         LA    R14,WECBSYS          * POINT A SYSTEM ECB          *   @ 00086368
+         LA    R15,WECBEND          * POINT A END ECB             *   @ 00086468
+         STM   R14,R15,0(R1)        * SAVE ALL ON ECBLIST         *   @ 00086568
+         OI    4(R1),X'80'          * SET THE LAST ECB            *   @ 00086668
+*                                                                 *   @ 00086768
+         ST    R1,WMPIAOE           * SAVE ECB LIST POINTER       *   @ 00086868
+         MVHI  WALLRVL,0            * CLEAN RETURN_VALUE          *   @ 00086968
+         MVHI  WALLRCD,0            * CLEAN RETURN_CODE           *   @ 00087068
+         MVHI  WALLRSC,0            * CLEAN REASON_CODE           *   @ 00087168
+*                                                                 *   @ 00087268
+         LA    R1,WALLPRM           * GET PARM ADDRESS            *   @ 00087368
+         LA    R14,WMPIAOE          * SET CALLING PARM 0          *   @ 00087468
+         LA    R15,WALLRVL          * SET CALLING PARM 4          *   @ 00087568
+         LA    R0,WALLRCD           * SET CALLING PARM 8          *   @ 00087668
+         STM   R14,R0,0(R1)         * SAVE ON PARM LIST           *   @ 00087768
+*                                                                 *   @ 00087868
+         LA    R14,WALLRSC          * SET CALLING PARM 12         *   @ 00087968
+         XR    R15,R15              * CLEAN                       *   @ 00088068
+         XR    R0,R0                * CLEAN                       *   @ 00088168
+         STM   R14,R0,12(R1)        * SAVE ON PARM LIST           *   @ 00088268
+         OI    12(R1),X'80'         * SET LAST PARM               *   @ 00088368
+*                                                                 *   @ 00088468
+INIT     BPXCALLS BPX1MPI           * MVSPAUSEINIT                *   @ 00088568
+         CHSI  WALLRVL,0            * ITS OK?                     *   @ 00088668
+         JL    BPXERROR             * NO, DISPLAY ERROR           *   @ 00088768
+*                                   * YES, GO PAUSE               *   @ 00088868
+         MVHI  WALLRVL,0            * CLEAN RETURN_VALUE          *   @ 00088968
+         MVHI  WALLRCD,0            * CLEAN RETURN_CODE           *   @ 00089068
+         MVHI  WALLRSC,0            * CLEAN REASON_CODE           *   @ 00089168
+*                                                                 *   @ 00089268
+         LA    R1,WALLPRM           * GET PARM ADDRESS            *   @ 00089368
+         LA    R14,WALLRVL          * SET CALLING PARM 0          *   @ 00089468
+         LA    R15,WALLRCD          * SET CALLING PARM 4          *   @ 00089568
+         LA    R0,WALLRSC           * SET CALLING PARM 8          *   @ 00089668
+         STM   R14,R0,0(R1)         * SAVE ON PARM LIST           *   @ 00089768
+         OI    8(R1),X'80'          * SET LAST PARM               *   @ 00090368
+*                                                                 *   @ 00090468
+PAUSE    BPXCALLS BPX1MP            * MVSPAUSE                    *   @ 00090568
+         CHSI  WALLRVL,0            * ITS OK?                     *   @ 00090668
+         JL    BPXERROR             * NO, DISPLAY ERROR           *   @ 00090768
+*-----------------------------------------------------------------*   @ 00090868
+*        CLOSE THE SOCKET                                         *   @ 00090968
+*-----------------------------------------------------------------*   @ 00091068
+         MVC   WCLOFDS,WSOCTAK      * MOVE SOCKET DESCRIPTOR      *   @ 00091168
+         MVHI  WALLRVL,0            * CLEAN RETURN_VALUE          *   @ 00091268
+         MVHI  WALLRCD,0            * CLEAN RETURN_CODE           *   @ 00091368
+         MVHI  WALLRSC,0            * CLEAN REASON_CODE           *   @ 00091468
+*                                                                 *   @ 00091568
+         LA    R1,WALLPRM           * GET PARM ADDRESS            *   @ 00091668
+         LA    R14,WCLOFDS          * SET CALLING PARM 0          *   @ 00091768
+         LA    R15,WALLRVL          * SET CALLING PARM 4          *   @ 00091868
+         LA    R0,WALLRCD           * SET CALLING PARM 8          *   @ 00091968
+         STM   R14,R0,0(R1)         * SAVE ON PARM LIST           *   @ 00092068
+*                                                                 *   @ 00092168
+         LA    R14,WALLRSC          * SET CALLING PARM 12         *   @ 00092268
+         XR    R15,R15              * CLEAN                       *   @ 00092368
+         XR    R0,R0                * CLEAN                       *   @ 00092468
+         STM   R14,R0,12(R1)        * SAVE ON PARM LIST           *   @ 00092568
+         OI    12(R1),X'80'         * SET LAST PARM               *   @ 00092668
+*                                                                 *   @ 00092768
+CLOSE    BPXCALLS BPX1CLO           * ACCEPT A CONNECTION         *   @ 00092868
+         CHSI  WALLRVL,0            * ITS OK?                     *   @ 00092968
+         JL    BPXERROR             * NO, DISPLAY ERROR           *   @ 00093068
+*-----------------------------------------------------------------*   @ 00093168
+*        END OF PROGRAM                                           *   @ 00093268
+*-----------------------------------------------------------------*   @ 00093368
+ENDPGM   DS   0H                                                  *   @ 00093468
+         STORAGE RELEASE,                                              X00093568
+               LENGTH=WLENGTH,                                         X00093668
+               LINKAGE=SYSTEM,                                         X00093768
+               ADDR=(R13)                                               00093868
+*                                                                 *   @ 00093968
+         PR ,                                                     *   @ 00094068
+*-----------------------------------------------------------------*   @ 00094168
+*        DISPLAY DO RETORNO BPX                                   *   @ 00094268
+*-----------------------------------------------------------------*   @ 00094368
+BPXERROR DS   0H                                                  *   @ 00094468
+         XC    WMSG,WMSG                                          *   @ 00094568
+         MVHHI WMSGL,L'WMSG                                       *   @ 00094668
+         MVC   WFULL(L'WALLRVL),WALLRVL                           *   @ 00094768
+         UNPK  WDOUBLE(9),WFULL(5)                                *   @ 00094868
+         NC    WDOUBLE,LTR1                                       *   @ 00094968
+         TR    WDOUBLE,LTR2                                       *   @ 00095068
+         MVC   WMSG(L'LRETVAL),LRETVAL                            *   @ 00095168
+         MVC   WMSG+L'LRETVAL(L'WDOUBLE),WDOUBLE                  *   @ 00095268
+         LA    R2,WMSGL                                           *   @ 00095368
+         WTO   TEXT=(R2),MF=(E,WWTO)                              *   @ 00095468
+*                                                                 *   @ 00095568
+         XC    WMSG,WMSG                                          *   @ 00095668
+         MVHHI WMSGL,L'WMSG                                       *   @ 00095768
+         MVC   WFULL(L'WALLRCD),WALLRCD                           *   @ 00095868
+         UNPK  WDOUBLE(9),WFULL(5)                                *   @ 00095968
+         NC    WDOUBLE,LTR1                                       *   @ 00096068
+         TR    WDOUBLE,LTR2                                       *   @ 00096168
+         MVC   WMSG(L'LRETCODE),LRETCODE                          *   @ 00096268
+         MVC   WMSG+L'LRETCODE(L'WDOUBLE),WDOUBLE                 *   @ 00096368
+         LA    R2,WMSGL                                           *   @ 00096468
+         WTO   TEXT=(R2),MF=(E,WWTO)                              *   @ 00096568
+*                                                                 *   @ 00096668
+         XC    WMSG,WMSG                                          *   @ 00096768
+         MVHHI WMSGL,L'WMSG                                       *   @ 00096868
+         MVC   WFULL(L'WALLRSC),WALLRSC                           *   @ 00096968
+         UNPK  WDOUBLE(9),WFULL(5)                                *   @ 00097068
+         NC    WDOUBLE,LTR1                                       *   @ 00097168
+         TR    WDOUBLE,LTR2                                       *   @ 00097268
+         MVC   WMSG(L'LRSNCODE),LRSNCODE                          *   @ 00097368
+         MVC   WMSG+L'LRSNCODE(L'WDOUBLE),WDOUBLE                 *   @ 00097468
+         LA    R2,WMSGL                                           *   @ 00097568
+         WTO   TEXT=(R2),MF=(E,WWTO)                              *   @ 00097668
+*                                                                 *   @ 00097768
+         J     ENDPGM                                             *   @ 00097868
+*-----------------------------------------------------------------*   @ 00097968
+*        LITERAL AREA                                             *   @ 00098068
+*-----------------------------------------------------------------*   @ 00098168
+LITERAL  DS   0D                                                  *   @ 00098268
+         LTORG ,                                                  *   @ 00098368
+*                                                                 *   @ 00098468
+LWTO     WTO   TEXT=,MF=L                                         *   @ 00098568
+LWTOL    EQU   *-LWTO                                             *   @ 00098668
+*                                                                 *   @ 00098768
+LATCX    ATTACHX EP=,SF=L                                         *   @ 00098868
+LATCXL   EQU   *-LATCX                                            *   @ 00098968
+*                                                                 *   @ 00099068
+LWEYECT  DC    C'WKCHDSRV'                                        *   @ 00099168
+LRETVAL  DC    C'RETVAL='                                         *   @ 00099268
+LRETCODE DC    C'RETCODE='                                        *   @ 00099368
+LRSNCODE DC    C'RSNCODE='                                        *   @ 00099468
+LTR1     DC    X'0F0F0F0F0F0F0F0F'                                *   @ 00099568
+LTR2     DC    C'0123456789ABCDEF'                                *   @ 00099668
+LZERDBIN DC    4X'00'                                             *   @ 00099768
+LFFFDBIN DC    4X'FF'                                             *   @ 00099868
+*-----------------------------------------------------------------*   @ 00099968
+*        WORKING STORAGE                                          *   @ 00100068
+*-----------------------------------------------------------------*   @ 00100168
+WORKING  DSECT ,                                                  *   @ 00100268
+         IHASAVER DSECT=NO,SAVER=NO,SAVF4SA=YES                   *   @ 00100368
+WEYECATC DS    CL8                  * WORKING EYE-CATCHER         *   @ 00100468
+*                                                                 *   @ 00100568
+* BPX ALL CALLING STRUCTURE                                       *   @ 00100668
+*                                                                 *   @ 00100768
+WALLRVL  DS    F                    * RETURN_VALUE                *   @ 00100868
+WALLRCD  DS    F                    * RETURN_CODE                 *   @ 00100968
+WALLRSC  DS    F                    * REASON_CODE                 *   @ 00101068
+WALLPRM  DS  13A                    * PARM_LIST                   *   @ 00101168
+*                                                                 *   @ 00101268
+* BPXSEL CALLING STRUCTURE                                        *   @ 00101368
+*                                                                 *   @ 00101468
+WSELNMF  DS    F                    * NUMBER_MSGSFDS              *   @ 00101568
+WSELRLL  DS    F                    * READ_LIST_LENGTH            *   @ 00101668
+WSELRLE  DS    F                    * READ_LIST                   *   @ 00101768
+WSELWLL  DS    F                    * WRITE_LIST_LENGTH           *   @ 00101868
+WSELWLE  DS    F                    * WRITE_LIST                  *   @ 00101968
+WSELELL  DS    F                    * EXCEPTION_LIST_LENGTH       *   @ 00102068
+WSELELE  DS    F                    * EXCEPTION_LIST              *   @ 00102168
+WSELTMP  DS    F                    * TIMEOUT_POINTER             *   @ 00102268
+WSELECB  DS    F                    * ECB_POINTER                 *   @ 00102368
+WSELUOF  DS    F                    * USER_OPTION_FIELD           *   @ 00102468
+*                                                                 *   @ 00102568
+* BPXTAK CALLING STRUCTURE                                        *   @ 00102668
+*                                                                 *   @ 00102768
+         DS   0F                    * ALLIGN                      *   @ 00102868
+WTAKCID  DS    XL(CID#LENGTH)       * CLIENTID                    *   @ 00102968
+WTAKSKD  DS    F                    * SOCKET_ID                   *   @ 00103068
+*                                                                 *   @ 00103168
+* BPXCLO CALLING STRUCTURE                                        *   @ 00103268
+*                                                                 *   @ 00103368
+WCLOFDS  DS    F                    * FILE_DESCRIPTOR             *   @ 00103468
+*                                                                 *   @ 00103568
+* BPXMPI CALLING STRUCTURE                                        *   @ 00103668
+*                                                                 *   @ 00103768
+WMPIAOE  DS    F                    * ADDR_OF_ECBLIST             *   @ 00103868
+*                                                                 *   @ 00103968
+* EXECUTION FORM                                                  *   @ 00104068
+*                                                                 *   @ 00104168
+WWTO     WTO   TEXT=,MF=L                                         *   @ 00104268
+WATCX    ATTACHX EP=,SF=L                                         *   @ 00104368
+WRPRMLST DS   2F                                                  *   @ 00104468
+WRPARM1  DS    F                                                  *   @ 00104568
+WRPARM2  DS    F                                                  *   @ 00104668
+*                                                                 *   @ 00104768
+* WORKING VARIABLES                                               *   @ 00104868
+*                                                                 *   @ 00104968
+WSOCTAK  DS    F                                                  *   @ 00105068
+WSELT    BPXYSELT DSECT=NO                                        *   @ 00105168
+WECBLIST DS   2F                                                  *   @ 00105268
+WECBSYS  DS    F                                                  *   @ 00105368
+WECBEND  DS    F                                                  *   @ 00105468
+*                                                                 *   @ 00105568
+WMSGL    DS    H                                                  *   @ 00105668
+WMSG     DS    CL72                                               *   @ 00105768
+*                                                                 *   @ 00105868
+WHALF    DS    H                                                  *   @ 00105968
+         DS    X                                                  *   @ 00106068
+*                                                                 *   @ 00106168
+WFULL    DS    F                                                  *   @ 00106268
+         DS    X                                                  *   @ 00106368
+*                                                                 *   @ 00106468
+WDOUBLE  DS    FD                                                 *   @ 00106568
+         DS    X                                                  *   @ 00106668
+WLENGTH  EQU   *-WORKING                                          *   @ 00106768
+*-----------------------------------------------------------------*   @ 00106868
+*        USS API'S DSECT'S                                        *   @ 00106968
+*-----------------------------------------------------------------*   @ 00107068
+BPXYSOCK BPXYSOCK ,                                               *   @ 00107168
+BPXYCID  BPXYCID ,                                                *   @ 00107268
+*-----------------------------------------------------------------*   @ 00107368
+*        EQUATES COPY'S                                           *   @ 00107468
+*-----------------------------------------------------------------*   @ 00107568
+BPXYCONS BPXYCONS ,                                               *   @ 00107668
+         COPY  BPXSERVO                                           *   @ 00107768
+         COPY  GENREGEQ                                           *   @ 00108068
+         END   TKCHDSRV                                           *   @ 00110063

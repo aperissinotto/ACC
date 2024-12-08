@@ -1,0 +1,9 @@
+//JCMC55SP JOB 1,NOTIFY=&SYSUID                                         00010002
+//LIBSCIC  JCLLIB  ORDER=DFH550.CICS.SDFHPROC                           00020000
+//COMPMAP  EXEC DFHMAPS,                                                00030001
+//          MAPLIB='ACC.DESV.LOAD',                                     00040001
+//          DSCTLIB='ACC.DESV.COPYBOOK',                                00050001
+//          A='A',                                                      00060001
+//          OUTC='*',                                                   00070001
+//          MAPNAME='MAP001'                                            00071001
+//COPY.SYSUT1 DD DISP=SHR,DSN=ACC.DESV.MAPSRC(&MAPNAME)                 00080001

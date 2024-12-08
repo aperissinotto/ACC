@@ -1,0 +1,43 @@
+//CLKASBAT PROC CMPPARM=,                                               00010013
+//       LNKPARM=,                                                      00011013
+//       PGMI=                                                          00012013
+//*                                                                     00020007
+//********************************************************************* 00030007
+//*                                                                   * 00040007
+//*  COMPILA E LINKEDITA HLASM BATCH REENTRANTE                       * 00050007
+//*                                                                   * 00060007
+//********************************************************************* 00150007
+//*                                                                     00230007
+//COMP     EXEC PGM=ASMA90,REGION=0M,PARM='&CMPPARM'                    00240012
+//*                                                                     00250007
+//SYSLIB   DD  DISP=SHR,DSN=SYS1.MACLIB                                 00260007
+//         DD  DISP=SHR,DSN=SYS1.MODGEN                                 00260116
+//         DD  DISP=SHR,DSN=TCPIP.SEZACMAC                              00260218
+//         DD  DISP=SHR,DSN=ACC.DESV.MACLIB                             00260318
+//         DD  DISP=SHR,DSN=ACC.DESV.COPYBOOK                           00261007
+//SYSUT1   DD  DSN=&&SYSUT1,SPACE=(16384,(120,120),,,ROUND),            00270007
+//             UNIT=SYSALLDA,BUFNO=1                                    00270116
+//SYSUT2   DD  DSN=&&SYSUT2,SPACE=(16384,(120,120),,,ROUND),            00271016
+//             UNIT=SYSALLDA,BUFNO=1                                    00280007
+//SYSUT3   DD  DSN=&&SYSUT3,SPACE=(16384,(120,120),,,ROUND),            00281016
+//             UNIT=SYSALLDA,BUFNO=1                                    00282016
+//SYSPRINT DD  SYSOUT=*                                                 00290007
+//SYSIN    DD  DISP=SHR,DSN=ACC.DESV.SOURCE(&PGMI)                      00291014
+//SYSPUNCH DD  DSN=&&OBJ,SPACE=(3040,(40,40),,,ROUND),                  00300016
+//             UNIT=SYSALLDA,DISP=(MOD,PASS),                           00310007
+//             BLKSIZE=3040,LRECL=80,RECFM=FB,BUFNO=1                   00320007
+//*                                                                     00330007
+//LINK     EXEC PGM=IEWL,PARM='&LNKPARM',REGION=0M,COND=(8,LT,COMP)     00340012
+//*                                                                     00350007
+//SYSLIB   DD  DISP=SHR,DSN=ACC.DESV.LOADLIB                            00351007
+//SYSLIN   DD  DSN=&&OBJ,DISP=(OLD,DELETE)                              00360007
+//         DD  DDNAME=SYSIN                                             00370007
+//SYSLMOD  DD  DISP=SHR,DSN=ACC.DESV.LOADLIB(&PGMI)                     00380011
+//SYSUT1   DD  DSN=&&SYSUT1,SPACE=(1024,(120,120),,,ROUND),             00400007
+//             UNIT=SYSALLDA,BUFNO=1                                    00410007
+//SYSUT2   DD  DSN=&&SYSUT2,SPACE=(1024,(120,120),,,ROUND),             00411016
+//             UNIT=SYSALLDA,BUFNO=1                                    00412016
+//SYSUT3   DD  DSN=&&SYSUT3,SPACE=(1024,(120,120),,,ROUND),             00413016
+//             UNIT=SYSALLDA,BUFNO=1                                    00414016
+//SYSPRINT DD  SYSOUT=*                                                 00420007
+//*                                                                     00430007

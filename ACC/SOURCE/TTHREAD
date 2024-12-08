@@ -1,0 +1,356 @@
+TTHREAD  RSECT ,                                                  *   @ 00010022
+TTHREAD  AMODE 31                                                 *   @ 00020021
+TTHREAD  RMODE ANY                                                *   @ 00030021
+         SYSSTATE ARCHLVL=6                                       *   @ 00030104
+         IEABRCX DEFINE                                           *   @ 00030204
+         STM   R14,R12,12(R13)      * SAVE - GENERAL REGS 31 BIT  *   @ 00030339
+         LARL  R12,LITERAL                                        *   @ 00030504
+         USING LITERAL,R12                                        *   @ 00030604
+         LR    R4,R1                * ENTRY PARM ADDRESS          *   @ 00030728
+         USING DEPARMS,R4           * BASE ENTRY PARM             *   @ 00030828
+*-----------------------------------------------------------------*   @ 00030904
+*        OBTEM AREA DE WORK                                       *   @ 00031004
+*-----------------------------------------------------------------*   @ 00031104
+         LR   R3,R13                * COPY PREV. SAVE             *   @ 00031223
+*                                                                 *   @ 00031304
+         STORAGE OBTAIN,                                               X00031523
+               LENGTH=WLENGTH,                                         X00031623
+               ADDR=(R13)                                               00031723
+*                                                                 *   @ 00031904
+         USING WORKING,R13                                        *   @ 00032004
+         ST    R3,4(,R13)           * SAVE PREV. SAVE             *   @ 00032223
+         ST    R13,8(,R3)           * SAVE NEXT  SAVE             *   @ 00032323
+*-----------------------------------------------------------------*   @ 00032507
+*        INICIALIZA LIST FORM                                     *   @ 00032620
+*-----------------------------------------------------------------*   @ 00032707
+         MVC   WWTO(LWTOL),LWTO                                   *   @ 00032807
+*-----------------------------------------------------------------*   @ 00032923
+*        DISPLAY WORK-ADDRESS                                     *   @ 00033031
+*-----------------------------------------------------------------*   @ 00034023
+         XC    WMSG,WMSG                                          *   @ 00035023
+         MVC   WMSG(L'LWRKADD),LWRKADD                            *   @ 00035131
+         MVHHI WMSGL,L'WMSG                                       *   @ 00036023
+         ST    R4,WFULL                                           *   @ 00037031
+         UNPK  WDOUBLE(9),WFULL(5)                                *   @ 00038031
+         NC    WDOUBLE,LTR1                                       *   @ 00039031
+         TR    WDOUBLE,LTR2                                       *   @ 00040031
+         MVC   WMSG+L'LWRKADD(8),WDOUBLE                          *   @ 00041031
+         LA    R2,WMSGL                                           *   @ 00042033
+         WTO   TEXT=(R2),MF=(E,WWTO)                              *   @ 00043033
+*-----------------------------------------------------------------*   @ 00043224
+*        CHAMADA DO BPX1PTX                                       *   @ 00043324
+*-----------------------------------------------------------------*   @ 00043424
+         XC    WLYR6FUL,WLYR6FUL    * CLEAN WORK                  *   @ 00043529
+         MVHI  WPTXSTAT,0                                         *   @ 00043638
+         MVHI  WPTXOPTN,PTGETNEWTHREAD                            *   @ 00043726
+         XC    WPTXSIGN,WPTXSIGN                                  *   @ 00043838
+*                                                                 *   @ 00043924
+         LA    R1,WPARMLST          * GET PARMS ADDRESS           *   @ 00044028
+         LA    R14,WPTXSTAT                                       *   @ 00044124
+         LA    R15,WPTXOPTN                                       *   @ 00044224
+         LA    R0,WPTXSIGN                                        *   @ 00044324
+         STM   R14,R0,0(R1)         * SAVE ON PARM LIST           *   @ 00044428
+*                                                                 *   @ 00044524
+         LA    R14,WRETVAL                                        *   @ 00044624
+         LA    R15,WRETCODE                                       *   @ 00044724
+         LA    R0,WRSNCODE                                        *   @ 00044824
+         STM   R14,R0,12(R1)        * SAVE ON PARM LIST           *   @ 00044928
+*                                                                 *   @ 00045024
+         OI    20(R1),X'80'         * SET LAST PARM               *   @ 00045128
+*                                                                 *   @ 00045224
+         L     R15,16                                             *   @ 00045324
+         L     R15,544(,R15)                                      *   @ 00045424
+         L     R15,24(,R15)                                       *   @ 00045524
+         L     R15,BPX1PTX(,R15)                                  *   @ 00045624
+         BASR  R14,R15                                            *   @ 00045724
+*                                                                 *   @ 00045824
+         CHSI  WRETVAL,0                                          *   @ 00045930
+         JNH   BPXERROR                                           *   @ 00046028
+*                                                                 *   @ 00046128
+         L     R1,WRETVAL           * GET PARM_LIST_NEW_THREAD    *   @ 00046230
+         ST    R1,WPRMNTAD          * SALVA PARM_LIST_NEW_THREAD  *   @ 00046328
+         USING PTXL,R1              * BASE PARM_LIST_NEW_THREAD   *   @ 00046431
+*                                                                 *   @ 00046528
+         L     R5,PTXLWORKAREAPTR   * GET USER_WORK_AREA_ADDRESS  *   @ 00046631
+         ST    R5,WUWRKAAD          * SAVE USER_WORK_AREA_ADDRESS *   @ 00046731
+*        USING     ,R5              * BASE USER_WORK_AREA_ADDRESS *   @ 00046831
+*                                                                 *   @ 00046928
+         L     R6,PTXLATTRIBUTEPTR  * GET USER_ATTRIBUTES_ADDR    *   @ 00047031
+         USING PTAT,R6              * BASE USER ATTRIBUTES_ADDR   *   @ 00047131
+*                                                                 *   @ 00047231
+         L     R2,PTXLTHIDPTR       * GET NEW_THREAD_ID_ADDRESS   *   @ 00047331
+         MVC   WNEWTHID,0(R2)       * MOVE NEW_THREAD_ID          *   @ 00047431
+*                                                                 *   @ 00047531
+         L     R7,PTXLSTATUSPTR     * GET  THREAD_RUN_STATUS_ADDR *   @ 00047631
+         USING PTXLRS,R7            * BASE THREAD_RUN_STATUS_ADDR *   @ 00047731
+*                                                                 *   @ 00047831
+         DROP  R1                   * FREE BASE                   *   @ 00047931
+*                                                                 *   @ 00048031
+         XC    WMSG,WMSG                                          *   @ 00048131
+         MVC   WMSG(L'LTHREID),LTHREID                            *   @ 00048231
+         MVHHI WMSGL,L'WMSG                                       *   @ 00048331
+         MVC   WFULL,WNEWTHID                                     *   @ 00048431
+         UNPK  WDOUBLE(9),WFULL(5)                                *   @ 00048531
+         NC    WDOUBLE,LTR1                                       *   @ 00048631
+         TR    WDOUBLE,LTR2                                       *   @ 00048731
+         MVC   WMSG+L'LTHREID(8),WDOUBLE                          *   @ 00048831
+         MVC   WFULL,WNEWTHID+4                                   *   @ 00048931
+         UNPK  WDOUBLE(9),WFULL(5)                                *   @ 00049031
+         NC    WDOUBLE,LTR1                                       *   @ 00049131
+         TR    WDOUBLE,LTR2                                       *   @ 00049231
+         MVC   WMSG+(L'LTHREID+8)(8),WDOUBLE                      *   @ 00049331
+         LA    R2,WMSGL                                           *   @ 00049431
+         WTO   TEXT=(R2),MF=(E,WWTO)                              *   @ 00049531
+*                                                                 *   @ 00049631
+         XC    WMSG,WMSG                                          *   @ 00049731
+         MVC   WMSG(L'LTHREFG),LTHREFG                            *   @ 00049831
+         MVHHI WMSGL,L'WMSG                                       *   @ 00049931
+         MVC   WFULL,PTXLRSFLAGS                                  *   @ 00050031
+         UNPK  WDOUBLE(9),WFULL(5)                                *   @ 00050131
+         NC    WDOUBLE,LTR1                                       *   @ 00050231
+         TR    WDOUBLE,LTR2                                       *   @ 00050331
+         MVC   WMSG+L'LTHREFG(8),WDOUBLE                          *   @ 00050431
+         LA    R2,WMSGL                                           *   @ 00050533
+         WTO   TEXT=(R2),MF=(E,WWTO)                              *   @ 00050633
+*                                                                 *   @ 00050731
+         XC    WMSG,WMSG                                          *   @ 00050831
+         MVC   WMSG(L'LUWKADD),LUWKADD                            *   @ 00050932
+         MVHHI WMSGL,L'WMSG                                       *   @ 00051031
+         MVC   WFULL,WUWRKAAD                                     *   @ 00051132
+         UNPK  WDOUBLE(9),WFULL(5)                                *   @ 00051231
+         NC    WDOUBLE,LTR1                                       *   @ 00051331
+         TR    WDOUBLE,LTR2                                       *   @ 00051431
+         MVC   WMSG+L'LUWKADD(8),WDOUBLE                          *   @ 00051532
+         LA    R2,WMSGL                                           *   @ 00051633
+         WTO   TEXT=(R2),MF=(E,WWTO)                              *   @ 00051733
+*                                                                 *   @ 00051838
+         XC    WMSG,WMSG                                          *   @ 00051938
+         MVC   WMSG(L'LUSTATUS),LUSTATUS                          *   @ 00052038
+         MVHHI WMSGL,L'WMSG                                       *   @ 00052138
+         MVC   WFULL,WPTXSTAT                                     *   @ 00052238
+         UNPK  WDOUBLE(9),WFULL(5)                                *   @ 00052338
+         NC    WDOUBLE,LTR1                                       *   @ 00052438
+         TR    WDOUBLE,LTR2                                       *   @ 00052538
+         MVC   WMSG+L'LUSTATUS(8),WDOUBLE                         *   @ 00052638
+         LA    R2,WMSGL                                           *   @ 00052738
+         WTO   TEXT=(R2),MF=(E,WWTO)                              *   @ 00052838
+*                                                                 *   @ 00052938
+         XC    WMSG,WMSG                                          *   @ 00053038
+         MVC   WMSG(L'LUSIGNAL),LUSIGNAL                          *   @ 00053138
+         MVHHI WMSGL,L'WMSG                                       *   @ 00053238
+         MVC   WFULL,WPTXSIGN                                     *   @ 00053338
+         UNPK  WDOUBLE(9),WFULL(5)                                *   @ 00053438
+         NC    WDOUBLE,LTR1                                       *   @ 00053538
+         TR    WDOUBLE,LTR2                                       *   @ 00053638
+         MVC   WMSG+L'LUSIGNAL(8),WDOUBLE                         *   @ 00053738
+         LA    R2,WMSGL                                           *   @ 00053838
+         WTO   TEXT=(R2),MF=(E,WWTO)                              *   @ 00053938
+*-----------------------------------------------------------------*   @ 00054038
+*        CHAMADA DO BPX1PTX                                       *   @ 00054138
+*-----------------------------------------------------------------*   @ 00054238
+         XC    WLYR6FUL,WLYR6FUL    * CLEAN WORK                  *   @ 00054338
+*        MVHI  WPTXSTAT,0                                         *   @ 00054438
+         MVHI  WPTXOPTN,PTEXITTHREAD                              *   @ 00054538
+*        XC    WPTXSIGN,WPTXSIGN                                  *   @ 00054638
+*                                                                 *   @ 00054738
+         LA    R1,WPARMLST          * GET PARMS ADDRESS           *   @ 00054838
+         LA    R14,WPTXSTAT                                       *   @ 00054938
+         LA    R15,WPTXOPTN                                       *   @ 00055038
+         LA    R0,WPTXSIGN                                        *   @ 00055138
+         STM   R14,R0,0(R1)         * SAVE ON PARM LIST           *   @ 00055238
+*                                                                 *   @ 00055338
+         LA    R14,WRETVAL                                        *   @ 00055438
+         LA    R15,WRETCODE                                       *   @ 00055538
+         LA    R0,WRSNCODE                                        *   @ 00055638
+         STM   R14,R0,12(R1)        * SAVE ON PARM LIST           *   @ 00055738
+*                                                                 *   @ 00055838
+         OI    20(R1),X'80'         * SET LAST PARM               *   @ 00055938
+*                                                                 *   @ 00056038
+         L     R15,16                                             *   @ 00056138
+         L     R15,544(,R15)                                      *   @ 00056238
+         L     R15,24(,R15)                                       *   @ 00056338
+         L     R15,BPX1PTX(,R15)                                  *   @ 00056438
+         BASR  R14,R15                                            *   @ 00056538
+*                                                                 *   @ 00056638
+         CHSI  WRETVAL,0                                          *   @ 00056738
+         JNE   BPXERROR                                           *   @ 00056838
+*                                                                 *   @ 00056938
+*        STIMER WAIT,BINTVL=INTV2                                 *   @ 00057040
+*-----------------------------------------------------------------*   @ 00057138
+*        FIM DO PROGRAMA                                          *   @ 00057238
+*-----------------------------------------------------------------*   @ 00057338
+ENDPGM   DS   0H                                                  *   @ 00057438
+         LR    R3,R13               * COPY TO RELEASE             *   @ 00057538
+         L     R13,4(,R13)          * REST. PREV. SAVE            *   @ 00057638
+*                                                                 *   @ 00057738
+         STORAGE RELEASE,                                              X00057838
+               LENGTH=WLENGTH,                                         X00057938
+               ADDR=(R3)                                                00058038
+*                                                                 *   @ 00058138
+         LM    R14,R12,12(R13)      * REST. GEN. REGS             *   @ 00058238
+         XR    R15,R15              * RC=0                        *   @ 00058338
+         BR    R14                  * RETURN TO CALLER            *   @ 00058438
+*-----------------------------------------------------------------*   @ 00058538
+*        DISPLAY DO RETORNO BPX                                   *   @ 00058638
+*-----------------------------------------------------------------*   @ 00058738
+BPXERROR DS   0H                                                  *   @ 00058838
+         XC    WMSG,WMSG                                          *   @ 00058938
+         MVHHI WMSGL,L'WMSG                                       *   @ 00059038
+         MVC   WFULL(L'WRETVAL),WRETVAL                           *   @ 00059138
+         UNPK  WDOUBLE(9),WFULL(5)                                *   @ 00059238
+         NC    WDOUBLE,LTR1                                       *   @ 00059338
+         TR    WDOUBLE,LTR2                                       *   @ 00059438
+         MVC   WMSG(L'LRETVAL),LRETVAL                            *   @ 00059538
+         MVC   WMSG+L'LRETVAL(L'WDOUBLE),WDOUBLE                  *   @ 00059638
+         LA    R2,WMSGL                                           *   @ 00059738
+         WTO   TEXT=(R2),MF=(E,WWTO)                              *   @ 00059838
+*                                                                 *   @ 00059938
+         XC    WMSG,WMSG                                          *   @ 00060038
+         MVHHI WMSGL,L'WMSG                                       *   @ 00060138
+         MVC   WFULL(L'WRETCODE),WRETCODE                         *   @ 00060238
+         UNPK  WDOUBLE(9),WFULL(5)                                *   @ 00060338
+         NC    WDOUBLE,LTR1                                       *   @ 00060438
+         TR    WDOUBLE,LTR2                                       *   @ 00060538
+         MVC   WMSG(L'LRETCODE),LRETCODE                          *   @ 00060638
+         MVC   WMSG+L'LRETCODE(L'WDOUBLE),WDOUBLE                 *   @ 00060738
+         LA    R2,WMSGL                                           *   @ 00060838
+         WTO   TEXT=(R2),MF=(E,WWTO)                              *   @ 00060938
+*                                                                 *   @ 00061038
+         XC    WMSG,WMSG                                          *   @ 00061138
+         MVHHI WMSGL,L'WMSG                                       *   @ 00061238
+         MVC   WFULL(L'WRSNCODE),WRSNCODE                         *   @ 00061338
+         UNPK  WDOUBLE(9),WFULL(5)                                *   @ 00061438
+         NC    WDOUBLE,LTR1                                       *   @ 00061538
+         TR    WDOUBLE,LTR2                                       *   @ 00061638
+         MVC   WMSG(L'LRSNCODE),LRSNCODE                          *   @ 00061738
+         MVC   WMSG+L'LRSNCODE(L'WDOUBLE),WDOUBLE                 *   @ 00061838
+         LA    R2,WMSGL                                           *   @ 00061938
+         WTO   TEXT=(R2),MF=(E,WWTO)                              *   @ 00062038
+*                                                                 *   @ 00062138
+         J     ENDPGM                                             *   @ 00062238
+*-----------------------------------------------------------------*   @ 00062338
+*        AREA DE LITERAIS                                         *   @ 00062438
+*-----------------------------------------------------------------*   @ 00062538
+LITERAL  DS   0D                                                  *   @ 00062638
+         LTORG ,                                                  *   @ 00062738
+LWTO     WTO   TEXT=,MF=L                                         *   @ 00062838
+LWTOL    EQU   *-LWTO                                             *   @ 00062938
+LTR1     DC    X'0F0F0F0F0F0F0F0F'                                *   @ 00063038
+LTR2     DC    C'0123456789ABCDEF'                                *   @ 00063138
+LHELLO   DC    C'HELLO WORLD!'                                    *   @ 00063238
+LRETVAL  DC    C'RETVAL='                                         *   @ 00063338
+LRETCODE DC    C'RETCODE='                                        *   @ 00063438
+LRSNCODE DC    C'RSNCODE='                                        *   @ 00063538
+LTHREID  DC    C'THREAD ID='                                      *   @ 00063638
+LTHREFG  DC    C'THREAD FLAGS='                                   *   @ 00063738
+LWRKADD  DC    C'WORK ADDRESS='                                   *   @ 00063838
+LUWKADD  DC    C'USER WORK AREA ADDRESS='                         *   @ 00063938
+LUSTATUS DC    C'STATUS FIELD='                                   *   @ 00064038
+LUSIGNAL DC    C'SIGNAL SETUP USERDATA='                          *   @ 00064138
+INTV2    DC    F'9000'                                            *   @ 00064238
+*-----------------------------------------------------------------*   @ 00064338
+*        WORKING STORAGE                                          *   @ 00064438
+*-----------------------------------------------------------------*   @ 00064538
+WORKING  DSECT ,                                                  *   @ 00064638
+WSAVAREA DS  18F                    * 72 BYTES SAVE AREA          *   @ 00064738
+*                                                                 *   @ 00064838
+WWTO     WTO   TEXT=,MF=L                                         *   @ 00064938
+WLOAD    LOAD  EP=,SF=L                                           *   @ 00065038
+*                                                                 *   @ 00065138
+WRETVAL  DS    F                    * RETURN_VALUE                *   @ 00065238
+WRETCODE DS    F                    * RETURN_CODE                 *   @ 00065338
+WRSNCODE DS    F                    * REASON_CODE                 *   @ 00065438
+WPARMLST DS  13A                    * LISTA DE PARAMETROS         *   @ 00065538
+*                                                                 *   @ 00065638
+WPRMNTAD DS    F                    * PARM_LIST_NEW_THREAD        *   @ 00065738
+WNEWTHID DS    FD                   * NEW_THREAD_ID               *   @ 00065838
+WUWRKAAD DS    F                    * USER_WORK_AREA_ADDRESS      *   @ 00065938
+WLYR6FUL DS    XL128                * AREA DE WORK                *   @ 00066038
+*---------------------------------->* AREA ESPECIFICA PARA        *   @ 00066138
+         ORG   WLYR6FUL             * BPX1PTX                     *   @ 00066238
+WPTXSTAT DS    F                    * STATUS_FIELD                *   @ 00066338
+WPTXOPTN DS    F                    * OPTIONS_FIELD               *   @ 00066438
+WPTXSIGN DS    CL4                  * SIGNAL_SETUP_USERDATA       *   @ 00066538
+         ORG   ,                                                  *   @ 00066638
+*                                                                 *   @ 00066738
+WMSGL    DS    H                                                  *   @ 00066838
+WMSG     DS    CL72                                               *   @ 00066938
+*                                                                 *   @ 00067038
+WFULL    DS    F                    * FULL DE WORK                *   @ 00067138
+         DS    X                                                  *   @ 00067238
+*                                                                 *   @ 00067338
+WDOUBLE  DS    FD                   * DOUBLE DE WORK              *   @ 00067438
+         DS    X                                                  *   @ 00067538
+*                                                                 *   @ 00067638
+WHALF    DS    H                    * HALF DE WORK                *   @ 00067738
+         DS    X                                                  *   @ 00067838
+WLENGTH  EQU   *-WORKING                                          *   @ 00067938
+*-----------------------------------------------------------------*   @ 00068038
+*        DSECT ENTRY PARMS                                        *   @ 00068138
+*-----------------------------------------------------------------*   @ 00068238
+DEPARMS   DSECT ,                                                 *   @ 00068338
+DEPARMAD  DS    F                    * PARM ADDRESS               *   @ 00068438
+DEPARMLT  DS    F                    * PARM LENGTH                *   @ 00068538
+DEPARMSL  EQU   *-DEPARMS                                         *   @ 00068638
+*-----------------------------------------------------------------*   @ 00068738
+*        DSECT PARM LIST NEW THREAD                               *   @ 00068838
+*-----------------------------------------------------------------*   @ 00068938
+DPRMLNT  DSECT ,                                                  *   @ 00069038
+DUWORKA  DS    F                    * USER_WORK_AREA_ADDRESS      *   @ 00069138
+DUATRBA  DS    F                    * USER_ATRIB_AREA_ADDRESS     *   @ 00069238
+DNEWTAD  DS    F                    * NEW_THREAD_ID_ADDRESS       *   @ 00069338
+DSTFDAD  DS    F                    * STATUS_FILD_ADDRESS         *   @ 00069438
+DPRMLNTL EQU   *-DPRMLNT                                          *   @ 00069538
+*-----------------------------------------------------------------*   @ 00069638
+*        MAP SOCKADDR STRUCTURE AND CONSTANTS                     *   @ 00069738
+*-----------------------------------------------------------------*   @ 00069838
+         BPXYSOCK DSECT=YES                                       *   @ 00069938
+*-----------------------------------------------------------------*   @ 00070038
+*        MAP THE PARAMETER PIST FOR PTHREAD_CREATE                *   @ 00070138
+*-----------------------------------------------------------------*   @ 00070238
+         BPXYPTXL DSECT=YES                                       *   @ 00070338
+*-----------------------------------------------------------------*   @ 00070438
+*        MAP ATTRIBUTES FOR PTHREAD_EXIT_AND_GET                  *   @ 00070538
+*-----------------------------------------------------------------*   @ 00070638
+         BPXYPTAT DSECT=YES                                       *   @ 00070738
+*-----------------------------------------------------------------*   @ 00070838
+*        EQUATES DOS SERVICOS DO USS                              *   @ 00070938
+*-----------------------------------------------------------------*   @ 00071038
+BPX1CLO  EQU   72                   * OFFSET DO MODULO BPX1CLO    *   @ 00071138
+BPX1FCT  EQU   96                   * OFFSET DO MODULO BPX1FCT    *   @ 00071238
+BPX1RED  EQU   176                  * OFFSET DO MODULO BPX1RED    *   @ 00071338
+BPX1WRT  EQU   220                  * OFFSET DO MODULO BPX1WRT    *   @ 00071438
+BPX1PTC  EQU   432                  * OFFSET DO MODULO BPX1PTC    *   @ 00071538
+BPX1PTX  EQU   436                  * OFFSET DO MODULO BPX1PTX    *   @ 00071638
+BPX1ACP  EQU   508                  * OFFSET DO MODULO BPX1ACP    *   @ 00071738
+BPX1BND  EQU   512                  * OFFSET DO MODULO BPX1BND    *   @ 00071838
+BPX1CON  EQU   516                  * OFFSET DO MODULO BPX1CON    *   @ 00071938
+BPX1GNM  EQU   524                  * OFFSET DO MODULO BPX1GNM    *   @ 00072038
+BPX1OPT  EQU   528                  * OFFSET DO MODULO BPX1OPT    *   @ 00072138
+BPX1LSN  EQU   532                  * OFFSET DO MODULO BPX1LSN    *   @ 00072238
+BPX1SEL  EQU   552                  * OFFSET DO MODULO BPX1SEL    *   @ 00072338
+BPX1SOC  EQU   576                  * OFFSET DO MODULO BPX1SOC    *   @ 00072438
+BPX1GCL  EQU   1024                 * OFFSET DO MODULO BPX1GCL    *   @ 00072538
+BPX1GIV  EQU   1028                 * OFFSET DO MODULO BPX1GIV    *   @ 00072638
+BPX1TAK  EQU   1032                 * OFFSET DO MODULO BPX1TAK    *   @ 00072738
+BPXYCONS BPXYCONS ,                                               *   @ 00072838
+*-----------------------------------------------------------------*   @ 00072938
+*        EQUATES DE REGISTRADORES                                 *   @ 00073038
+*-----------------------------------------------------------------*   @ 00073138
+R0       EQU   0                                                  *   @ 00073238
+R1       EQU   1                                                  *   @ 00073338
+R2       EQU   2                                                  *   @ 00073438
+R3       EQU   3                                                  *   @ 00073538
+R4       EQU   4                                                  *   @ 00073638
+R5       EQU   5                                                  *   @ 00073738
+R6       EQU   6                                                  *   @ 00073838
+R7       EQU   7                                                  *   @ 00073938
+R8       EQU   8                                                  *   @ 00074038
+R9       EQU   9                                                  *   @ 00074138
+R10      EQU   10                                                 *   @ 00074238
+R11      EQU   11                                                 *   @ 00074338
+R12      EQU   12                                                 *   @ 00074438
+R13      EQU   13                                                 *   @ 00074538
+R14      EQU   14                                                 *   @ 00074638
+R15      EQU   15                                                 *   @ 00075038
+         END   TTHREAD                                                  00080021
